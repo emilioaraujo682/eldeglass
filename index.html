@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Eldeglass makes AI assistant glasses that help older adults ride the bus, shop and find their way.">
+<title>Eldeglass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: sunny colour-blocked bands, each one a "scene" from an Eldeglass wearer's day, with hand-made illustrations. Single bright look on purpose. */
+:root{
+  --sun:#FFC83D; --coral:#FF6B57; --teal:#12A894; --sky:#5BC0F8; --lilac:#B69CFF;
+  --ink:#1D2348; --paper:#FFFBF2; --cream:#FFF1D6; --muted:#4A5078;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0}
+img{max-width:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+.wrap{max-width:1160px;margin-inline:auto;padding-inline:20px}
+h1,h2,h3{font-family:var(--display);line-height:1.05;text-wrap:balance;margin:0}
+h2{font-size:clamp(2rem,5vw,3.4rem);font-weight:800;letter-spacing:-.02em}
+h3{font-size:1.45rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:.82rem}
+a{color:inherit}
+a:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:6px}
+
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--paper);border-bottom:3px solid var(--ink)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:1.5rem;text-decoration:none}
+.logo svg{width:52px;height:auto}
+nav ul{display:flex;gap:6px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+nav ul a{text-decoration:none;font-weight:700;padding:6px 12px;border-radius:999px;font-size:.95rem}
+nav ul a:hover{background:var(--sun)}
+
+/* hero */
+.hero{background:var(--sun);border-bottom:3px solid var(--ink);overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;padding-block:64px 72px}
+.hero h1{font-size:clamp(2.6rem,7vw,5.2rem);font-weight:800;letter-spacing:-.03em}
+.hero h1 em{font-style:normal;background:var(--ink);color:var(--sun);padding:0 .18em;border-radius:.15em}
+.hero p.lede{font-size:1.25rem;max-width:34ch;margin-top:22px}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-block;font-family:var(--display);font-weight:700;font-size:1.05rem;padding:14px 24px;border:3px solid var(--ink);border-radius:999px;text-decoration:none;box-shadow:4px 4px 0 var(--ink);transition:transform .15s, box-shadow .15s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn.primary{background:var(--coral);color:#fff}
+.btn.ghost{background:var(--paper)}
+.hero-art{min-width:0}
+.hero-art svg{width:100%;height:auto;display:block}
+.hud{animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.hud{animation:none}}
+
+/* strip */
+.strip{background:var(--ink);color:var(--paper);overflow:hidden;white-space:nowrap;padding-block:14px;font-family:var(--display);font-weight:700;font-size:1.15rem}
+.strip span{display:inline-block;padding-inline:22px}
+.strip b{color:var(--sun)}
+
+section{padding-block:80px}
+.intro{display:grid;grid-template-columns:1fr 1.3fr;gap:48px;align-items:start}
+.intro p{font-size:1.15rem;color:var(--muted);max-width:60ch}
+.intro p + p{margin-top:16px}
+
+/* what we do */
+.do{background:var(--cream);border-block:3px solid var(--ink)}
+.do-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:40px}
+.do-head p{max-width:46ch;color:var(--muted)}
+.scenes{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.scene{background:var(--paper);border:3px solid var(--ink);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.scene svg{display:block;width:100%;height:auto;border-bottom:3px solid var(--ink)}
+.scene .txt{padding:22px;display:flex;flex-direction:column;gap:10px}
+.scene .say{font-family:var(--display);font-weight:700;background:var(--ink);color:var(--paper);border-radius:14px;padding:10px 14px;font-size:.98rem}
+.scene .say::before{content:"Eldeglass says: ";color:var(--sun)}
+.scene p{color:var(--muted)}
+
+/* how */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px;counter-reset:s}
+.step{border-top:6px solid var(--ink);padding-top:18px}
+.step .n{font-family:var(--display);font-weight:800;font-size:3.2rem;line-height:1}
+.step:nth-child(1) .n{color:var(--coral)} .step:nth-child(2) .n{color:var(--teal)} .step:nth-child(3) .n{color:var(--lilac)}
+.step h3{margin-block:8px}
+.step p{color:var(--muted)}
+
+/* features */
+.feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
+.chip{border-radius:18px;padding:20px;border:3px solid var(--ink)}
+.chip strong{display:block;font-family:var(--display);font-size:1.15rem;margin-bottom:4px}
+.chip span{font-size:.95rem}
+.c1{background:var(--sky)} .c2{background:var(--sun)} .c3{background:var(--lilac)} .c4{background:var(--teal);color:#fff}
+
+/* company */
+.company{background:var(--teal);color:#fff;border-block:3px solid var(--ink)}
+.company .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:48px}
+.company p{font-size:1.1rem;max-width:58ch}
+.company p + p{margin-top:16px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+.fact{background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:18px;padding:18px}
+.fact .k{font-family:var(--display);font-weight:800;font-size:2.1rem;line-height:1;font-variant-numeric:tabular-nums}
+.fact .l{font-size:.92rem;color:var(--muted);margin-top:6px}
+.mv{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px}
+.mv div{background:rgba(0,0,0,.14);border-radius:18px;padding:22px}
+.mv .eyebrow{color:var(--sun);display:block;margin-bottom:6px}
+
+/* values */
+.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.value{border:3px solid var(--ink);border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:10px;box-shadow:6px 6px 0 var(--ink)}
+.value svg{width:54px;height:54px}
+.value p{font-size:1rem}
+.v1{background:#FFE3DE} .v2{background:#DDF6F1} .v3{background:#FFF0C2} .v4{background:#ECE5FF} .v5{background:#DDF1FE} .v6{background:var(--ink);color:var(--paper)}
+.v6 h3{color:var(--sun)}
+
+/* factories */
+.fac{background:var(--lilac);border-block:3px solid var(--ink)}
+.fac-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
+.plant{background:var(--paper);border:3px solid var(--ink);border-radius:22px;overflow:hidden;min-width:0}
+.plant svg{display:block;width:100%;height:auto;border-bottom:3px solid var(--ink)}
+.plant .txt{padding:22px;display:flex;flex-direction:column;gap:8px}
+.plant .loc{font-family:var(--display);font-weight:700;color:var(--coral)}
+.plant ul{margin:4px 0 0;padding-left:20px;color:var(--muted)}
+.fac-wide{margin-top:24px}
+
+/* quote + cta */
+.quote{display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+.quote svg{width:170px;height:auto}
+.quote blockquote{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3.4vw,2.3rem);line-height:1.2;text-wrap:balance}
+.quote cite{display:block;font-style:normal;font-family:var(--body);font-size:1rem;color:var(--muted);margin-top:14px}
+.cta{background:var(--coral);color:#fff;border-top:3px solid var(--ink)}
+.cta .wrap{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.cta .btn.ghost{color:var(--ink)}
+footer{background:var(--ink);color:var(--paper);padding-block:28px;font-size:.92rem}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer em{color:var(--sun);font-style:normal}
+
+@media (max-width:900px){
+  .hero .wrap,.intro,.company .grid,.fac-grid{grid-template-columns:1fr}
+  .scenes,.steps,.values-grid{grid-template-columns:1fr 1fr}
+  .feat{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  body{font-size:17px}
+  .scenes,.steps,.values-grid,.feat,.mv,.facts{grid-template-columns:1fr}
+  .quote{grid-template-columns:1fr}
+  section{padding-block:56px}
+  nav ul{display:none}
+}
+</style>
+</head>
+<body>
+
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top">
+      <svg viewBox="0 0 60 26" aria-hidden="true"><circle cx="15" cy="13" r="10" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/><circle cx="45" cy="13" r="10" fill="#5BC0F8" stroke="#1D2348" stroke-width="3"/><path d="M25 12 q5 -5 10 0" fill="none" stroke="#1D2348" stroke-width="3"/></svg>
+      Eldeglass
+    </a>
+    <ul>
+      <li><a href="#what">What we do</a></li>
+      <li><a href="#company">Our company</a></li>
+      <li><a href="#values">Values</a></li>
+      <li><a href="#factories">Factories</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">AI assistant glasses for older adults</p>
+      <h1 style="margin-top:14px">Your city, <em>in plain view.</em></h1>
+      <p class="lede">Eldeglass glasses talk you through buses, grocery aisles and street corners, so you can get out of the house and run your own day.</p>
+      <div class="btns">
+        <a class="btn primary" href="#what">See how it helps</a>
+        <a class="btn ghost" href="#company">Meet the company</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <svg viewBox="0 0 560 420" role="img" aria-label="Illustration of Eldeglass glasses showing a bus arrival time on the lens">
+        <circle cx="430" cy="90" r="70" fill="#FF6B57"/>
+        <circle cx="90" cy="340" r="54" fill="#12A894"/>
+        <rect x="380" y="300" width="130" height="80" rx="40" fill="#B69CFF" stroke="#1D2348" stroke-width="4"/>
+        <g class="hud">
+          <!-- temples -->
+          <path d="M40 170 L10 150" stroke="#1D2348" stroke-width="14" stroke-linecap="round"/>
+          <path d="M520 170 L550 150" stroke="#1D2348" stroke-width="14" stroke-linecap="round"/>
+          <!-- frames -->
+          <rect x="34" y="120" width="220" height="170" rx="70" fill="#DDF1FE" stroke="#1D2348" stroke-width="14"/>
+          <rect x="306" y="120" width="220" height="170" rx="70" fill="#DDF1FE" stroke="#1D2348" stroke-width="14"/>
+          <path d="M254 180 q26 -26 52 0" fill="none" stroke="#1D2348" stroke-width="14" stroke-linecap="round"/>
+          <!-- camera + mic -->
+          <circle cx="60" cy="140" r="9" fill="#FF6B57" stroke="#1D2348" stroke-width="3"/>
+          <circle cx="500" cy="140" r="6" fill="#12A894"/>
+          <!-- left lens HUD: bus -->
+          <rect x="66" y="160" width="156" height="92" rx="18" fill="#1D2348"/>
+          <rect x="80" y="174" width="44" height="30" rx="7" fill="#FFC83D"/>
+          <circle cx="90" cy="208" r="5" fill="#FFC83D"/><circle cx="114" cy="208" r="5" fill="#FFC83D"/>
+          <text x="134" y="188" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="17" fill="#FFC83D">Bus 12</text>
+          <text x="134" y="206" font-family="Atkinson Hyperlegible, sans-serif" font-size="13" fill="#FFFBF2">in 4 min</text>
+          <text x="80" y="238" font-family="Atkinson Hyperlegible, sans-serif" font-size="13" fill="#FFFBF2">Stop is 30 steps ahead</text>
+          <!-- right lens HUD: arrow -->
+          <rect x="338" y="160" width="156" height="92" rx="18" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+          <path d="M370 222 h44 v-18 l30 26 l-30 26 v-18 h-44z" transform="translate(0,-24)" fill="#12A894" stroke="#1D2348" stroke-width="3" stroke-linejoin="round"/>
+          <text x="352" y="242" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700" font-size="13" fill="#1D2348">Turn right on 5th Ave</text>
+        </g>
+        <!-- sparkles -->
+        <path d="M290 60 l8 20 l20 8 l-20 8 l-8 20 l-8 -20 l-20 -8 l20 -8z" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+        <path d="M200 360 l5 12 l12 5 l-12 5 l-5 12 l-5 -12 l-12 -5 l12 -5z" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+        <!-- speech bubble -->
+        <path d="M150 20 h150 a20 20 0 0 1 20 20 v34 a20 20 0 0 1 -20 20 h-110 l-24 20 v-20 h-16 a20 20 0 0 1 -20 -20 v-34 a20 20 0 0 1 20 -20z" fill="#FFFBF2" stroke="#1D2348" stroke-width="4"/>
+        <text x="168" y="64" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="20" fill="#1D2348">"Where's my bus?"</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="strip" aria-hidden="true"><span><b>●</b> Public transport</span><span><b>●</b> Grocery shopping</span><span><b>●</b> Walking directions</span><span><b>●</b> Reading signs & labels</span><span><b>●</b> Calling family</span><span><b>●</b> Medication reminders</span></div>
+
+<section>
+  <div class="wrap intro">
+    <div>
+      <p class="eyebrow" style="color:var(--coral)">Why we exist</p>
+      <h2 style="margin-top:10px">Staying home shouldn't be the only safe choice.</h2>
+    </div>
+    <div>
+      <p>Many older adults stop going out because the outside world got harder to read: small print on bus schedules, crowded stores, confusing intersections, and apps built for young thumbs. Little by little, home becomes the only place that feels easy.</p>
+      <p>Eldeglass builds glasses that look like regular glasses and work like a patient friend walking beside you. You just talk to them. They see what you see, and they answer out loud in a calm, clear voice.</p>
+    </div>
+  </div>
+</section>
+
+<section class="do" id="what">
+  <div class="wrap">
+    <div class="do-head">
+      <div>
+        <p class="eyebrow" style="color:var(--teal)">What we do</p>
+        <h2 style="margin-top:10px">Three trips, one pair of glasses</h2>
+      </div>
+      <p>Eldeglass is built around the errands that keep people independent. Here is what a normal Tuesday looks like for a wearer.</p>
+    </div>
+    <div class="scenes">
+      <article class="scene">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of an older woman with glasses waiting at a bus stop as a bus arrives">
+          <rect width="400" height="240" fill="#5BC0F8"/>
+          <circle cx="330" cy="50" r="26" fill="#FFC83D"/>
+          <rect y="190" width="400" height="50" fill="#1D2348"/>
+          <rect y="186" width="400" height="8" fill="#FFFBF2"/>
+          <!-- bus -->
+          <rect x="150" y="96" width="230" height="96" rx="16" fill="#FF6B57" stroke="#1D2348" stroke-width="4"/>
+          <rect x="166" y="110" width="40" height="34" rx="6" fill="#DDF1FE" stroke="#1D2348" stroke-width="3"/>
+          <rect x="214" y="110" width="40" height="34" rx="6" fill="#DDF1FE" stroke="#1D2348" stroke-width="3"/>
+          <rect x="262" y="110" width="40" height="34" rx="6" fill="#DDF1FE" stroke="#1D2348" stroke-width="3"/>
+          <rect x="310" y="110" width="56" height="70" rx="6" fill="#DDF1FE" stroke="#1D2348" stroke-width="3"/>
+          <rect x="166" y="152" width="40" height="14" rx="4" fill="#FFC83D"/>
+          <text x="174" y="163" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="12" fill="#1D2348">12</text>
+          <circle cx="196" cy="192" r="15" fill="#1D2348"/><circle cx="196" cy="192" r="6" fill="#FFFBF2"/>
+          <circle cx="330" cy="192" r="15" fill="#1D2348"/><circle cx="330" cy="192" r="6" fill="#FFFBF2"/>
+          <!-- stop sign -->
+          <rect x="40" y="70" width="6" height="120" fill="#1D2348"/>
+          <rect x="22" y="56" width="42" height="34" rx="8" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/>
+          <text x="31" y="79" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="14" fill="#1D2348">BUS</text>
+          <!-- person -->
+          <circle cx="100" cy="104" r="18" fill="#F2C29B" stroke="#1D2348" stroke-width="3"/>
+          <path d="M82 98 q18 -24 36 0" fill="#E9E6F2" stroke="#1D2348" stroke-width="3"/>
+          <rect x="88" y="100" width="10" height="8" rx="3" fill="none" stroke="#1D2348" stroke-width="2.5"/>
+          <rect x="102" y="100" width="10" height="8" rx="3" fill="none" stroke="#1D2348" stroke-width="2.5"/>
+          <path d="M80 186 q2 -60 20 -64 q18 4 20 64z" fill="#B69CFF" stroke="#1D2348" stroke-width="3"/>
+          <path d="M128 130 v58" stroke="#1D2348" stroke-width="4" stroke-linecap="round"/>
+          <path d="M118 140 l10 -10" stroke="#1D2348" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div class="txt">
+          <h3>Riding public transport</h3>
+          <p>Eldeglass reads the bus number before it stops, counts down arrival times, and tells you which stop to get off at. A gentle tap on your temple when it's time to ring the bell.</p>
+          <p class="say">Bus 12 is here. Your stop is the 6th one.</p>
+        </div>
+      </article>
+
+      <article class="scene">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of grocery shelves with one item highlighted by the glasses">
+          <rect width="400" height="240" fill="#FFF0C2"/>
+          <rect x="20" y="20" width="360" height="200" rx="10" fill="#FFFBF2" stroke="#1D2348" stroke-width="4"/>
+          <rect x="20" y="82" width="360" height="8" fill="#1D2348"/>
+          <rect x="20" y="148" width="360" height="8" fill="#1D2348"/>
+          <!-- top shelf -->
+          <g stroke="#1D2348" stroke-width="3">
+            <rect x="36" y="40" width="34" height="42" rx="5" fill="#FF6B57"/>
+            <rect x="76" y="40" width="34" height="42" rx="5" fill="#FF6B57"/>
+            <rect x="120" y="32" width="28" height="50" rx="10" fill="#12A894"/>
+            <rect x="154" y="32" width="28" height="50" rx="10" fill="#12A894"/>
+            <rect x="196" y="46" width="52" height="36" rx="5" fill="#FFC83D"/>
+            <rect x="258" y="40" width="34" height="42" rx="5" fill="#B69CFF"/>
+            <rect x="300" y="40" width="34" height="42" rx="5" fill="#B69CFF"/>
+            <rect x="340" y="46" width="28" height="36" rx="5" fill="#5BC0F8"/>
+            <!-- middle shelf -->
+            <circle cx="52" cy="128" r="18" fill="#FF6B57"/><circle cx="90" cy="128" r="18" fill="#FF6B57"/>
+            <rect x="120" y="102" width="40" height="46" rx="6" fill="#5BC0F8"/>
+            <rect x="168" y="102" width="40" height="46" rx="6" fill="#5BC0F8"/>
+            <rect x="222" y="98" width="56" height="50" rx="6" fill="#FFFBF2"/>
+            <rect x="290" y="108" width="34" height="40" rx="5" fill="#FFC83D"/>
+            <rect x="332" y="108" width="34" height="40" rx="5" fill="#FFC83D"/>
+            <!-- bottom -->
+            <rect x="36" y="168" width="70" height="50" rx="6" fill="#12A894"/>
+            <rect x="116" y="168" width="70" height="50" rx="6" fill="#B69CFF"/>
+            <rect x="196" y="168" width="70" height="50" rx="6" fill="#FF6B57"/>
+            <rect x="276" y="168" width="90" height="50" rx="6" fill="#FFC83D"/>
+          </g>
+          <text x="232" y="122" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="12" fill="#1D2348">OATS</text>
+          <!-- highlight -->
+          <rect x="212" y="90" width="76" height="66" rx="10" fill="none" stroke="#FF6B57" stroke-width="5" stroke-dasharray="10 6"/>
+          <rect x="196" y="160" width="108" height="30" rx="15" fill="#1D2348"/>
+          <text x="208" y="180" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700" font-size="13" fill="#FFC83D">Q2.50 · on list ✓</text>
+        </svg>
+        <div class="txt">
+          <h3>Grocery shopping</h3>
+          <p>Say your list out loud at home. In the store, Eldeglass points you to the right aisle, reads tiny labels and expiry dates, and adds up your total before you reach the cashier.</p>
+          <p class="say">The oats are on your left, second shelf.</p>
+        </div>
+      </article>
+
+      <article class="scene">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of a street map with a walking route to a pharmacy">
+          <rect width="400" height="240" fill="#DDF6F1"/>
+          <g fill="#FFFBF2" stroke="#1D2348" stroke-width="3">
+            <rect x="20" y="20" width="110" height="70" rx="10"/>
+            <rect x="160" y="20" width="90" height="70" rx="10"/>
+            <rect x="280" y="20" width="100" height="70" rx="10"/>
+            <rect x="20" y="130" width="110" height="90" rx="10"/>
+            <rect x="160" y="130" width="90" height="90" rx="10"/>
+          </g>
+          <rect x="280" y="130" width="100" height="90" rx="10" fill="#12A894" stroke="#1D2348" stroke-width="3"/>
+          <rect x="316" y="156" width="28" height="28" rx="4" fill="#FFFBF2"/>
+          <path d="M330 160 v20 M320 170 h20" stroke="#12A894" stroke-width="6"/>
+          <text x="296" y="210" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="13" fill="#FFFBF2">Pharmacy</text>
+          <circle cx="60" cy="55" r="16" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/>
+          <circle cx="205" cy="55" r="16" fill="#FF6B57" stroke="#1D2348" stroke-width="3"/>
+          <circle cx="75" cy="175" r="18" fill="#5BC0F8" stroke="#1D2348" stroke-width="3"/>
+          <!-- route -->
+          <path d="M40 110 H265 V180 H280" fill="none" stroke="#FF6B57" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 16"/>
+          <circle cx="40" cy="110" r="12" fill="#1D2348"/>
+          <circle cx="40" cy="110" r="5" fill="#FFC83D"/>
+          <!-- crosswalk -->
+          <g fill="#1D2348"><rect x="254" y="96" width="22" height="4"/><rect x="254" y="104" width="22" height="4"/><rect x="254" y="112" width="22" height="4"/><rect x="254" y="120" width="22" height="4"/></g>
+          <rect x="140" y="98" width="98" height="26" rx="13" fill="#1D2348"/>
+          <text x="152" y="116" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700" font-size="12" fill="#FFC83D">220 m · 4 min</text>
+        </svg>
+        <div class="txt">
+          <h3>Getting directions</h3>
+          <p>Turn-by-turn guidance spoken in landmarks, not compass points. Eldeglass waits for the green light with you and warns about steps, curbs and uneven sidewalks.</p>
+          <p class="say">Cross at the white stripes. The pharmacy is the green door.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--coral)">How it works</p>
+    <h2 style="margin-top:10px">No screens. No passwords. Just ask.</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Put them on</h3><p>Eldeglass turns on when you unfold the arms. Your prescription lenses fit right in, so they replace the glasses you already wear.</p></div>
+      <div class="step"><div class="n">2</div><h3>Say what you need</h3><p>"Take me to the bank." "What does this sign say?" The built-in camera and AI understand the world in front of you.</p></div>
+      <div class="step"><div class="n">3</div><h3>Go at your pace</h3><p>Answers come by voice and in large, high-contrast text on the lens. If you get lost, one long press calls a family member.</p></div>
+    </div>
+    <div class="feat">
+      <div class="chip c1"><strong>18 hours</strong><span>battery on one charge, with a cradle charger on your nightstand</span></div>
+      <div class="chip c2"><strong>42 grams</strong><span>about as light as an ordinary pair of reading glasses</span></div>
+      <div class="chip c3"><strong>12 languages</strong><span>including Spanish, English and K'iche'</span></div>
+      <div class="chip c4"><strong>Fall alert</strong><span>detects a fall and contacts your emergency person</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="company" id="company">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <p class="eyebrow" style="color:var(--sun)">Company summary</p>
+        <h2 style="margin-top:10px">About Eldeglass</h2>
+        <p style="margin-top:22px">Eldeglass was founded in 2023 in Guatemala City by a small team of engineers, an optometrist and a social worker. The idea started with a grandmother who stopped taking the bus after she got lost twice. Her grandson, one of our founders, wanted to build something that would give her back her Tuesday market trips.</p>
+        <p>Today Eldeglass designs, manufactures and sells AI assistant glasses for adults over 65. We sell through opticians, pharmacies and senior centers, and we offer a monthly plan so families can share the cost. Every pair comes with in-person training at a local partner store, because nobody should have to learn new technology alone.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><div class="k">2023</div><div class="l">Founded in Guatemala City</div></div>
+        <div class="fact"><div class="k">120</div><div class="l">Employees across 3 countries</div></div>
+        <div class="fact"><div class="k">35,000</div><div class="l">Pairs worn every day</div></div>
+        <div class="fact"><div class="k">68%</div><div class="l">Of wearers leave home more often after 3 months</div></div>
+      </div>
+    </div>
+    <div class="mv">
+      <div><span class="eyebrow">Mission</span><p>Help older adults move through their city with confidence, so they can keep living their own lives on their own terms.</p></div>
+      <div><span class="eyebrow">Vision</span><p>A world where age is never the reason someone stays locked inside their house.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="values">
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--teal)">Our values</p>
+    <h2 style="margin-top:10px">What we stand for</h2>
+    <div class="values-grid">
+      <div class="value v1">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="24" fill="#FF6B57" stroke="#1D2348" stroke-width="3"/><path d="M15 30 l8 8 l16 -18" fill="none" stroke="#FFFBF2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>Independence first</h3>
+        <p>We measure success by how often our wearers go out on their own, not by how long they look at a screen.</p>
+      </div>
+      <div class="value v2">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><path d="M27 46 C6 32 6 12 18 10 c5 -1 8 2 9 6 c1 -4 4 -7 9 -6 c12 2 12 22 -9 36z" fill="#12A894" stroke="#1D2348" stroke-width="3"/></svg>
+        <h3>Patience and respect</h3>
+        <p>Our assistant never rushes, never talks down and repeats itself as many times as you need. Older adults are experts in their own lives.</p>
+      </div>
+      <div class="value v3">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><rect x="12" y="24" width="30" height="24" rx="5" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/><path d="M18 24 v-6 a9 9 0 0 1 18 0 v6" fill="none" stroke="#1D2348" stroke-width="3"/><circle cx="27" cy="35" r="4" fill="#1D2348"/></svg>
+        <h3>Privacy you can trust</h3>
+        <p>Images are processed on the glasses and deleted right away. A light on the frame always shows when the camera is on.</p>
+      </div>
+      <div class="value v4">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><text x="7" y="40" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="32" fill="#1D2348">Aa</text><rect x="4" y="44" width="46" height="5" rx="2" fill="#B69CFF"/></svg>
+        <h3>Simple by design</h3>
+        <p>Big text, few buttons, plain words. If a feature needs a manual to explain it, we redesign the feature.</p>
+      </div>
+      <div class="value v5">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="19" cy="20" r="8" fill="#5BC0F8" stroke="#1D2348" stroke-width="3"/><circle cx="36" cy="20" r="8" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/><path d="M6 46 q13 -20 26 0 M22 46 q14 -20 28 0" fill="none" stroke="#1D2348" stroke-width="3"/></svg>
+        <h3>Family in the loop</h3>
+        <p>Loved ones can help with setup and get peace of mind, while the wearer stays in charge of what gets shared.</p>
+      </div>
+      <div class="value v6">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="22" fill="#12A894" stroke="#FFC83D" stroke-width="3"/><path d="M14 30 q8 -16 26 -10 q-6 18 -26 10z" fill="#FFC83D"/></svg>
+        <h3>Made to last</h3>
+        <p>Replaceable batteries, repairable frames and recycled acetate. A good pair of glasses should be with you for years.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="fac" id="factories">
+  <div class="wrap">
+    <p class="eyebrow">Where Eldeglass is made</p>
+    <h2 style="margin-top:10px">Our factories</h2>
+    <p style="max-width:58ch;margin-top:16px">We build every pair in our own facilities so we can control quality from the first lens to the final fitting. Our plants run on a mix of solar and grid power and hire locally.</p>
+    <div class="fac-grid">
+      <article class="plant">
+        <svg viewBox="0 0 520 280" role="img" aria-label="Illustration of the Eldeglass assembly factory with sawtooth roof and solar panels">
+          <rect width="520" height="280" fill="#5BC0F8"/>
+          <circle cx="440" cy="60" r="30" fill="#FFC83D"/>
+          <path d="M60 50 q20 -14 40 0 q16 -10 30 4 h-70z" fill="#FFFBF2"/>
+          <path d="M250 40 q20 -14 40 0 q16 -10 30 4 h-70z" fill="#FFFBF2"/>
+          <rect y="232" width="520" height="48" fill="#12A894"/>
+          <!-- chimney + smoke -->
+          <rect x="360" y="70" width="28" height="90" fill="#FF6B57" stroke="#1D2348" stroke-width="4"/>
+          <rect x="356" y="80" width="36" height="10" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+          <circle cx="380" cy="56" r="12" fill="#FFFBF2" opacity=".9"/><circle cx="396" cy="40" r="9" fill="#FFFBF2" opacity=".8"/>
+          <!-- sawtooth building -->
+          <path d="M40 232 V130 L100 100 V130 L160 100 V130 L220 100 V130 L280 100 V130 L340 100 V232z" fill="#FFC83D" stroke="#1D2348" stroke-width="4" stroke-linejoin="round"/>
+          <g fill="#1D2348"><path d="M100 100 v30 l-12 0z"/><path d="M160 100 v30 l-12 0z"/><path d="M220 100 v30 l-12 0z"/><path d="M280 100 v30 l-12 0z"/><path d="M340 100 v30 l-12 0z"/></g>
+          <!-- solar -->
+          <g fill="#1D2348"><rect x="52" y="112" width="34" height="8" transform="rotate(-26 52 112)"/><rect x="112" y="112" width="34" height="8" transform="rotate(-26 112 112)"/><rect x="172" y="112" width="34" height="8" transform="rotate(-26 172 112)"/><rect x="232" y="112" width="34" height="8" transform="rotate(-26 232 112)"/></g>
+          <!-- windows -->
+          <g fill="#DDF1FE" stroke="#1D2348" stroke-width="3">
+            <rect x="60" y="150" width="40" height="30" rx="4"/><rect x="116" y="150" width="40" height="30" rx="4"/><rect x="172" y="150" width="40" height="30" rx="4"/><rect x="228" y="150" width="40" height="30" rx="4"/><rect x="284" y="150" width="40" height="30" rx="4"/>
+          </g>
+          <rect x="150" y="192" width="70" height="40" fill="#FF6B57" stroke="#1D2348" stroke-width="4"/>
+          <path d="M150 202 h70 M150 212 h70 M150 222 h70" stroke="#1D2348" stroke-width="2"/>
+          <!-- side office -->
+          <rect x="340" y="160" width="140" height="72" fill="#B69CFF" stroke="#1D2348" stroke-width="4"/>
+          <rect x="356" y="174" width="108" height="26" rx="6" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+          <text x="368" y="193" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="16" fill="#1D2348">ELDEGLASS</text>
+          <rect x="396" y="206" width="28" height="26" fill="#1D2348"/>
+          <!-- trees -->
+          <circle cx="20" cy="212" r="18" fill="#0E7F70" stroke="#1D2348" stroke-width="3"/><rect x="17" y="222" width="6" height="12" fill="#1D2348"/>
+          <circle cx="500" cy="212" r="16" fill="#0E7F70" stroke="#1D2348" stroke-width="3"/><rect x="497" y="220" width="6" height="12" fill="#1D2348"/>
+        </svg>
+        <div class="txt">
+          <span class="loc">Plant 1 · Villa Nueva, Guatemala</span>
+          <h3>Assembly & Testing Center</h3>
+          <p>Our main plant, where frames, cameras, speakers and batteries come together.</p>
+          <ul><li>Up to 2,000 pairs assembled per day</li><li>Every pair passes a 40-point check, including a real walk-test outside</li><li>40% of power comes from rooftop solar</li></ul>
+        </div>
+      </article>
+
+      <article class="plant">
+        <svg viewBox="0 0 520 280" role="img" aria-label="Illustration of the inside of the lens lab with a conveyor belt carrying glasses and a robotic arm">
+          <rect width="520" height="280" fill="#ECE5FF"/>
+          <!-- back wall windows -->
+          <g fill="#DDF1FE" stroke="#1D2348" stroke-width="3"><rect x="30" y="30" width="90" height="60" rx="6"/><rect x="140" y="30" width="90" height="60" rx="6"/><rect x="250" y="30" width="90" height="60" rx="6"/><rect x="360" y="30" width="130" height="60" rx="6"/></g>
+          <!-- lamps -->
+          <g stroke="#1D2348" stroke-width="3"><path d="M110 0 v100"/><path d="M300 0 v100"/></g>
+          <path d="M92 100 h36 l-8 -14 h-20z" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/>
+          <path d="M282 100 h36 l-8 -14 h-20z" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/>
+          <rect y="240" width="520" height="40" fill="#1D2348"/>
+          <!-- robot arm -->
+          <rect x="400" y="200" width="70" height="40" rx="6" fill="#FF6B57" stroke="#1D2348" stroke-width="4"/>
+          <path d="M435 200 L410 130 L340 120" fill="none" stroke="#FFC83D" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M435 200 L410 130 L340 120" fill="none" stroke="#1D2348" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
+          <circle cx="410" cy="130" r="11" fill="#1D2348"/><circle cx="435" cy="200" r="11" fill="#1D2348"/>
+          <path d="M330 112 v24 M350 112 v24" stroke="#1D2348" stroke-width="5" stroke-linecap="round"/>
+          <!-- conveyor -->
+          <rect x="20" y="186" width="380" height="22" rx="11" fill="#4A5078" stroke="#1D2348" stroke-width="4"/>
+          <g fill="#FFFBF2"><circle cx="40" cy="197" r="5"/><circle cx="120" cy="197" r="5"/><circle cx="200" cy="197" r="5"/><circle cx="280" cy="197" r="5"/><circle cx="360" cy="197" r="5"/></g>
+          <rect x="40" y="208" width="10" height="32" fill="#1D2348"/><rect x="370" y="208" width="10" height="32" fill="#1D2348"/>
+          <!-- glasses on conveyor -->
+          <g stroke="#1D2348" stroke-width="5" fill="#DDF1FE">
+            <rect x="50" y="160" width="34" height="24" rx="10"/><rect x="92" y="160" width="34" height="24" rx="10"/>
+            <rect x="160" y="160" width="34" height="24" rx="10" fill="#FFC83D"/><rect x="202" y="160" width="34" height="24" rx="10" fill="#FFC83D"/>
+            <rect x="270" y="160" width="34" height="24" rx="10" fill="#B69CFF"/><rect x="312" y="160" width="34" height="24" rx="10" fill="#B69CFF"/>
+          </g>
+          <g stroke="#1D2348" stroke-width="4" fill="none"><path d="M84 168 q4 -4 8 0"/><path d="M194 168 q4 -4 8 0"/><path d="M304 168 q4 -4 8 0"/></g>
+          <!-- worker -->
+          <circle cx="160" cy="118" r="0"/>
+          <!-- crates -->
+          <rect x="30" y="246" width="60" height="0"/>
+          <!-- quality badge -->
+          <circle cx="470" cy="150" r="0"/>
+          <rect x="200" y="112" width="104" height="30" rx="15" fill="#12A894" stroke="#1D2348" stroke-width="3"/>
+          <text x="214" y="132" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="14" fill="#FFFBF2">LENS CHECK ✓</text>
+        </svg>
+        <div class="txt">
+          <span class="loc">Plant 2 · Heredia, Costa Rica</span>
+          <h3>Lens & Optics Lab</h3>
+          <p>Where we cut prescription lenses and add the tiny display layer that shows text on the glass.</p>
+          <ul><li>Lenses cut to each customer's prescription</li><li>Clean-room coating line for the display layer</li><li>Partnership with local universities for optics training</li></ul>
+        </div>
+      </article>
+    </div>
+
+    <article class="plant fac-wide">
+      <svg viewBox="0 0 1080 260" role="img" aria-label="Illustration of the Eldeglass recycling and repair center with colorful buildings and delivery vans">
+        <rect width="1080" height="260" fill="#FFF0C2"/>
+        <circle cx="980" cy="60" r="34" fill="#FF6B57"/>
+        <rect y="212" width="1080" height="48" fill="#1D2348"/>
+        <g stroke="#FFC83D" stroke-width="6" stroke-dasharray="40 30"><path d="M0 236 H1080"/></g>
+        <g stroke="#1D2348" stroke-width="4">
+          <rect x="60" y="100" width="200" height="112" fill="#12A894"/>
+          <path d="M50 100 L160 50 L270 100z" fill="#FF6B57" stroke-linejoin="round"/>
+          <rect x="290" y="70" width="260" height="142" fill="#5BC0F8"/>
+          <rect x="580" y="120" width="180" height="92" fill="#B69CFF"/>
+          <path d="M580 120 L620 96 L660 120 L700 96 L740 120 L760 120" fill="#FFC83D" stroke-linejoin="round"/>
+        </g>
+        <g fill="#FFFBF2" stroke="#1D2348" stroke-width="3">
+          <rect x="84" y="124" width="40" height="30" rx="4"/><rect x="196" y="124" width="40" height="30" rx="4"/>
+          <rect x="310" y="92" width="50" height="34" rx="4"/><rect x="380" y="92" width="50" height="34" rx="4"/><rect x="450" y="92" width="50" height="34" rx="4"/>
+          <rect x="310" y="142" width="50" height="34" rx="4"/><rect x="450" y="142" width="50" height="34" rx="4"/>
+          <rect x="600" y="140" width="40" height="30" rx="4"/><rect x="700" y="140" width="40" height="30" rx="4"/>
+        </g>
+        <rect x="136" y="164" width="48" height="48" fill="#1D2348"/>
+        <rect x="378" y="150" width="56" height="62" fill="#FFC83D" stroke="#1D2348" stroke-width="3"/>
+        <!-- recycle sign -->
+        <circle cx="160" cy="80" r="14" fill="#FFFBF2" stroke="#1D2348" stroke-width="3"/>
+        <path d="M153 84 l7 -12 l7 12z" fill="#12A894"/>
+        <!-- vans -->
+        <g stroke="#1D2348" stroke-width="4">
+          <path d="M800 212 v-56 h90 l30 30 v26z" fill="#FFFBF2"/>
+          <path d="M890 160 l24 24 h-24z" fill="#DDF1FE"/>
+          <circle cx="830" cy="214" r="14" fill="#1D2348"/><circle cx="895" cy="214" r="14" fill="#1D2348"/>
+        </g>
+        <text x="812" y="194" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="15" fill="#FF6B57">ELDEGLASS</text>
+        <g stroke="#1D2348" stroke-width="4">
+          <path d="M950 212 v-46 h70 l24 24 v22z" fill="#FFC83D"/>
+          <circle cx="972" cy="214" r="12" fill="#1D2348"/><circle cx="1024" cy="214" r="12" fill="#1D2348"/>
+        </g>
+      </svg>
+      <div class="txt">
+        <span class="loc">Plant 3 · Mérida, Mexico</span>
+        <h3>Repair & Recycling Center</h3>
+        <p>Old pairs come back here to be repaired, refurbished and donated to senior centers, or recycled when they reach the end of their life. Our vans also deliver repaired glasses to customers' doors within 5 days.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <div class="wrap quote">
+    <svg viewBox="0 0 170 170" role="img" aria-label="Illustrated portrait of an older woman wearing Eldeglass glasses">
+      <circle cx="85" cy="85" r="82" fill="#FFC83D" stroke="#1D2348" stroke-width="4"/>
+      <path d="M30 160 q55 -70 110 0" fill="#FF6B57" stroke="#1D2348" stroke-width="4"/>
+      <circle cx="85" cy="78" r="36" fill="#E0A97F" stroke="#1D2348" stroke-width="4"/>
+      <path d="M48 76 q4 -50 37 -46 q33 -4 37 46 q-10 -26 -37 -24 q-27 -2 -37 24z" fill="#FFFBF2" stroke="#1D2348" stroke-width="4"/>
+      <rect x="56" y="70" width="24" height="18" rx="7" fill="#DDF1FE" stroke="#1D2348" stroke-width="4"/>
+      <rect x="90" y="70" width="24" height="18" rx="7" fill="#DDF1FE" stroke="#1D2348" stroke-width="4"/>
+      <path d="M80 76 h10" stroke="#1D2348" stroke-width="4"/>
+      <path d="M74 100 q11 9 22 0" fill="none" stroke="#1D2348" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <blockquote>"I go to the market by myself again. My glasses tell me which bus to take, and I tell my grandchildren what I bought."</blockquote>
+      <cite>Doña Marta, 78 — example wearer story (fictional)</cite>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <div>
+      <h2>Ready to get back outside?</h2>
+      <p style="margin-top:10px;font-size:1.15rem">Try Eldeglass free for 30 days at any partner optician.</p>
+    </div>
+    <a class="btn ghost" href="#top">Back to top</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Eldeglass · Your city, in plain view.</span>
+    <span><em>Fictional company</em> created for a class project.</span>
+  </div>
+</footer>
+
+</body>
+</html>
