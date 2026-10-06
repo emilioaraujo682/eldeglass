@@ -82,6 +82,9 @@ nav ul a:hover{background:var(--sun)}
 .hud{transform-origin:50% 50%;will-change:transform}
 .ping{position:absolute;left:0;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:3px solid #3EE6A8;pointer-events:none;animation:ping .9s ease-out forwards}
 @keyframes ping{from{transform:scale(1);opacity:1}to{transform:scale(14);opacity:0}}
+.mode-chip{position:absolute;left:50%;top:60px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font:700 .78rem var(--display);letter-spacing:.14em;color:var(--ink);background:#FFC83D;border-radius:999px;padding:5px 14px;opacity:0;box-shadow:0 0 18px rgba(255,200,61,.6)}
+.mode-chip i{width:14px;height:14px;border-radius:50%;background:var(--ink);box-shadow:inset -4px -2px 0 #FFC83D}
+@media (max-width:700px){.mode-chip{top:96px}}
 .reticle{position:absolute;left:0;top:0;width:10px;height:10px;opacity:0;will-change:transform,opacity}
 .reticle span{position:absolute;width:22px;height:22px;border:4px solid #3EE6A8;filter:drop-shadow(0 0 6px #3EE6A8)}
 .reticle span:nth-child(1){left:-6px;top:-6px;border-right:0;border-bottom:0}
@@ -516,7 +519,7 @@ footer em{color:var(--sun);font-style:normal}
       </div>
 
       <div class="cine-outro" id="cineOutro">
-        <p class="eyebrow">That was Rosa's morning with EldeGlass</p>
+        <p class="eyebrow">That was Rosa's day with EldeGlass</p>
         <h2>Independence, one look at a time.</h2>
         <div class="btns">
           <a class="btn primary" href="#what">See how it helps</a>
@@ -530,8 +533,9 @@ footer em{color:var(--sun);font-style:normal}
         <div class="hud-top">
           <span class="hud-brand"><i class="live"></i>EldeGlass</span>
           <span class="hud-wave" id="hudWave"><b></b><b></b><b></b><b></b><b></b></span>
-          <span class="hud-right"><button type="button" class="voice" id="voiceBtn" aria-pressed="false"><span class="spk"></span><span id="voiceTxt">Voice off</span></button><span class="hud-time">9:41 · <span class="batt"><i></i></span> 86%</span></span>
+          <span class="hud-right"><button type="button" class="voice" id="voiceBtn" aria-pressed="false"><span class="spk"></span><span id="voiceTxt">Voice off</span></button><span class="hud-time"><span id="hudClock">6:05 AM</span> · <span class="batt"><i id="battFill"></i></span> <span id="battPct">92%</span></span></span>
         </div>
+        <div class="mode-chip" id="modeChip"><i></i><span id="modeTxt">LOW LIGHT MODE</span></div>
         <div class="reticle" id="reticle"><span></span><span></span><span></span><span></span><em id="retLabel"></em></div>
 
         <div class="hcard" data-i="0">
@@ -1102,9 +1106,9 @@ footer em{color:var(--sun);font-style:normal}
   var targets=[$('tBus'),$('tOats'),$('tDoor')];
   var LABELS=['BUS 12 · 98%','OATS · ON LIST','PHARMACY · 220 M'];
   var SCRIPT=[
-    ["Where's my bus?","Bus 12 is pulling in now. Your stop is the 6th one."],
+    ["Where's my bus?","Good morning! Bus 12 is pulling in now. Your stop is the 6th one."],
     ["Where are the oats?","Right in front of you, second shelf. They're on your list."],
-    ["Take me to the pharmacy.","Cross at the white stripes, then turn right. It's the green door."]
+    ["Take me to the pharmacy.","It's dark, so I'm lighting your path. Cross at the stripes, then turn right to the green door."]
   ];
   var nav=document.querySelector('nav');
   function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
@@ -1113,11 +1117,12 @@ footer em{color:var(--sun);font-style:normal}
   function easeOut(x){return 1-Math.pow(1-x,3);}
 
   // ---- build the procedural parts of the city ----
+  var farWins=[];
   var rnd=(function(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};})(7);
   var farCols=['#B9C7F5','#D6CCFF','#A9DDF7','#C7D9F2'];
   for(var x=-2200;x<7200;){var w=110+rnd()*170,h=180+rnd()*300,c=farCols[Math.floor(rnd()*4)];
     el('rect',{x:x,y:640-h,width:w,height:h,fill:c},lFar);
-    for(var wy=640-h+24;wy<610;wy+=40)for(var wx=x+16;wx<x+w-22;wx+=34)el('rect',{x:wx,y:wy,width:16,height:20,fill:'#FFFFFF',opacity:.45},lFar);
+    for(var wy=640-h+24;wy<610;wy+=40)for(var wx=x+16;wx<x+w-22;wx+=34){ el('rect',{x:wx,y:wy,width:16,height:20,fill:'#FFFFFF',opacity:.45},lFar); if(rnd()<.45) farWins.push([wx,wy]); }
     x+=w+8+rnd()*30;}
   for(var tx=-1800;tx<7000;tx+=420+rnd()*260){
     el('rect',{x:tx-7,y:520,width:14,height:120,fill:'#1D2348'},lMid);
@@ -1158,6 +1163,66 @@ footer em{color:var(--sun);font-style:normal}
     el('circle',{cx:0,cy:-76,r:16,fill:skin[Math.floor(rnd()*4)],stroke:'#1D2348','stroke-width':4},pg);
     if(rnd()>.5) el('path',{d:'M-17 -80 a17 17 0 0 1 34 0z',fill:'#E9E6F2',stroke:'#1D2348','stroke-width':3},pg);
     var d=rnd()>.5?1:-1; walkers.push({g:pg,a:legA,b:legB,x:rnd()*5200-200,y:664+rnd()*20,v:(26+rnd()*20)*d,ph:rnd()*6}); }
+
+  // ---- time of day: dawn at the bus stop, noon at the market, night at the pharmacy ----
+  var skyStops=[].slice.call(document.querySelectorAll('#skyG stop'));
+  var sunG=lSun, sunCore=lSun.children[0], sunHalo=lSun.children[1];
+  var shade=el('rect',{x:-3000,y:-1600,width:11000,height:4200,fill:'#070B26',opacity:0},place);
+  var skyL=el('g',{},place), sunL=el('g',{},place), farL=el('g',{},place), nearL=el('g',{},place);
+  var stars=[]; for(var st=0;st<90;st++) stars.push({c:el('circle',{cx:(rnd()*7200-1200).toFixed(0),cy:(rnd()*1400-1100).toFixed(0),r:(1.5+rnd()*3).toFixed(1),fill:'#FFFFFF',opacity:0},skyL),ph:rnd()*6,k:1+rnd()*3});
+  var moon=el('g',{opacity:0},sunL); el('circle',{cx:560,cy:170,r:62,fill:'#FFF4C9'},moon); el('circle',{cx:560,cy:170,r:100,fill:'#FFF4C9',opacity:.12},moon); var moonBite=el('circle',{cx:588,cy:150,r:54,fill:'#0B1235'},moon);
+  farWins.forEach(function(w){ el('rect',{x:w[0],y:w[1],width:16,height:20,fill:'#FFD66B'},farL); }); farL.setAttribute('opacity',0);
+  // far windows must not shine through the nearer buildings: mask them with the near skyline
+  var defs=svg.querySelector('defs'), fmask=el('mask',{id:'farMask',maskUnits:'userSpaceOnUse',x:-3000,y:-1600,width:11000,height:4200},defs);
+  el('rect',{x:-3000,y:-1600,width:11000,height:4200,fill:'#FFFFFF'},fmask);
+  var maskNear=el('g',{},fmask);
+  [[1840,250,1120,400],[3480,300,300,350],[3780,260,520,390],[4300,330,420,320],[150,420,290,230],[-3000,640,11000,2000]].forEach(function(r){ el('rect',{x:r[0],y:r[1],width:r[2],height:r[3],fill:'#000000'},maskNear); });
+  farL.setAttribute('mask','url(#farMask)');
+  // street lamps on the sidewalk, behind the bus
+  var lampG=el('g',{}); lNear.insertBefore(lampG,bus);
+  var lampXs=[-300,1560,3180,4640,6100], lampGlows=[];
+  lampXs.forEach(function(lx){ el('rect',{x:lx-7,y:380,width:14,height:262,fill:'#1D2348'},lampG); el('path',{d:'M'+lx+' 386 q0 -40 46 -40',fill:'none',stroke:'#1D2348','stroke-width':12},lampG);
+    el('rect',{x:lx+30,y:340,width:44,height:18,rx:6,fill:'#4A5078',stroke:'#1D2348','stroke-width':4},lampG);
+    var gl=el('g',{},nearL); el('path',{d:'M'+(lx+34)+' 358 L'+(lx-60)+' 700 H'+(lx+170)+' L'+(lx+70)+' 358Z',fill:'#FFE7A0',opacity:.28},gl); el('circle',{cx:lx+52,cy:356,r:22,fill:'#FFF2B8'},gl); el('circle',{cx:lx+52,cy:356,r:60,fill:'#FFE7A0',opacity:.3},gl); lampGlows.push(gl); });
+  // glowing shop windows and signs
+  var cityGlow=el('g',{opacity:0},nearL);
+  [[1910,410,980,230,'#FFE2A0',.55],[3830,400,120,110,'#FFE2A0',.85],[4130,400,120,110,'#FFE2A0',.85],[3510,340,100,80,'#FFD66B',.8],[3650,460,100,80,'#FFD66B',.8],[4340,370,150,90,'#FFD66B',.8],[4530,500,150,90,'#FFD66B',.8],[182,460,226,150,'#FFF2B8',.45]].forEach(function(r){ el('rect',{x:r[0],y:r[1],width:r[2],height:r[3],fill:r[4],opacity:r[5]},cityGlow); });
+  el('rect',{x:3830,y:292,width:420,height:70,rx:12,fill:'#FFFBF2',stroke:'#3EE6A8','stroke-width':6},cityGlow);
+  el('text',{x:4070,y:340,'text-anchor':'middle','font-family':'Bricolage Grotesque, sans-serif','font-weight':800,'font-size':36,'letter-spacing':3,fill:'#1D2348'},cityGlow).textContent='PHARMACY';
+  var cross=el('g',{transform:'translate(3876 327)'},cityGlow); el('circle',{r:34,fill:'#3EE6A8',opacity:.35},cross); el('rect',{x:-20,y:-7,width:40,height:14,fill:'#12A894'},cross); el('rect',{x:-7,y:-20,width:14,height:40,fill:'#12A894'},cross);
+  el('rect',{x:3972,y:462,width:136,height:186,rx:10,fill:'#3EE6A8',opacity:.25},cityGlow);
+  // the AR path draws on top of the dark
+  nearL.appendChild(arrow); nearL.appendChild(head);
+  var heads=cars.map(function(c){ var h=el('g',{},nearL); el('path',{d:'M110 -46 L380 -90 L380 10 Z',fill:'#FFF2B8',opacity:.35},h); el('circle',{cx:106,cy:-44,r:9,fill:'#FFF8D6'},h); el('circle',{cx:-106,cy:-44,r:7,fill:'#FF6B57'},h); return h; });
+  var night=0, lampsOn=0;
+  function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+  function keyf(K,d,fn){ for(var i=0;i<K.length-1;i++){ if(d<=K[i+1][0]||i===K.length-2){ var a=K[i],b=K[i+1],f=clamp((d-a[0])/(b[0]-a[0]),0,1); f=f*f*(3-2*f); return fn(a[1],b[1],f); } } }
+  function mixC(a,b,f){ var x=hex(a),y=hex(b); return 'rgb('+x.map(function(v,i){return Math.round(v+(y[i]-v)*f);}).join(',')+')'; }
+  function mixN(a,b,f){ return a.map(function(v,i){return v+(b[i]-v)*f;}); }
+  var KD=[0,.35,1,1.5,2];
+  var SKY=[['#1F2A63','#C77DA8','#FFB27A'],['#6FB9EE','#F7C9B5','#FFE2B0'],['#4FB3F5','#A9DCFF','#E4F4FF'],['#3D4C9A','#F08A6B','#FFC27A'],['#070B26','#142050','#2A3170']];
+  var SHADE=[['#2A2060',.32],['#FF9E6B',.06],['#000000',0],['#5A2A60',.16],['#070B26',.6]];
+  var SUN=[[520,620,'#FF8A5B'],[700,330,'#FFB347'],[1050,110,'#FFC83D'],[1400,430,'#FF6B57'],[1520,820,'#FF6B57']];
+  var CLOCK=[365,450,750,1120,1250];
+  function dayOf(t){ return 0.35*sm(0.12,0.37,t)+0.65*sm(0.37,0.5,t)+sm(0.58,0.78,t); }
+  function setDay(t){
+    var d=dayOf(t);
+    skyStops.forEach(function(stp,i){ stp.setAttribute('stop-color',keyf(KD.map(function(k,j){return [k,SKY[j][i]];}),d,mixC)); });
+    shade.setAttribute('fill',keyf(KD.map(function(k,j){return [k,SHADE[j][0]];}),d,mixC));
+    shade.setAttribute('opacity',keyf(KD.map(function(k,j){return [k,[SHADE[j][1]]];}),d,mixN)[0].toFixed(3));
+    var sp=keyf(KD.map(function(k,j){return [k,[SUN[j][0],SUN[j][1]]];}),d,mixN), sc=keyf(KD.map(function(k,j){return [k,SUN[j][2]];}),d,mixC);
+    [sunCore,sunHalo].forEach(function(c){ c.setAttribute('cx',sp[0].toFixed(1)); c.setAttribute('cy',sp[1].toFixed(1)); c.setAttribute('fill',sc); });
+    night=sm(1.45,1.9,d); lampsOn=Math.max(night,1-sm(0.06,0.3,d));
+    moon.setAttribute('opacity',night.toFixed(3)); moonBite.setAttribute('fill','#10163C'); farL.setAttribute('opacity',night.toFixed(3));
+    cityGlow.setAttribute('opacity',(Math.max(night,lampsOn*0.5)).toFixed(3));
+    lampGlows.forEach(function(g){ g.setAttribute('opacity',lampsOn.toFixed(3)); });
+    var mins=keyf(KD.map(function(k,j){return [k,[CLOCK[j]]];}),d,mixN)[0], hh=Math.floor(mins/60), mm=Math.floor(mins%60), ap=hh>=12?'PM':'AM', h12=hh%12||12;
+    $('hudClock').textContent=h12+':'+(mm<10?'0':'')+mm+' '+ap;
+    var bp=Math.round(92-34*clamp((t-0.12)/0.75,0,1)); $('battPct').textContent=bp+'%'; $('battFill').style.right=(4+14*(1-bp/100))+'px';
+    var mc=Math.max(night,1-sm(0.12,0.3,d)); $('modeChip').style.opacity=(mc*hudVis).toFixed(3); $('modeTxt').textContent=night>0.5?'NIGHT MODE ON':'LOW LIGHT MODE';
+    return d;
+  }
+  var hudVis=0;
   var tl=[$('tlR'),$('tlY'),$('tlG')], tlOn=['#FF6B57','#FFC83D','#3EE6A8'], tlOff=['#5A2230','#5A4A22','#1F4A3E'];
   function ambient(T){
     clouds.forEach(function(c){ var x=((c.x+c.v*T+2500)%8000)-2500; c.g.setAttribute('transform','translate('+x.toFixed(1)+' '+c.y.toFixed(1)+')'); });
@@ -1170,6 +1235,9 @@ footer em{color:var(--sun);font-style:normal}
       w.g.setAttribute('transform','translate('+x.toFixed(1)+' '+(w.y-Math.abs(Math.cos(T*6+w.ph))*3).toFixed(1)+')'+(w.v<0?' scale(-1 1)':''));
       w.a.setAttribute('d','M-6 0 L'+(-6+sw).toFixed(1)+' 30'); w.b.setAttribute('d','M6 0 L'+(6-sw).toFixed(1)+' 30'); });
     var bl=(T%3.6)<0.14?0.12:1; eyes.forEach(function(ey,i){ var cx=i?970:630; ey.setAttribute('transform','translate(0 515) scale(1 '+bl+') translate(0 -515)'); });
+    cars.forEach(function(c,i){ heads[i].setAttribute('transform',c.g.getAttribute('transform')); heads[i].setAttribute('opacity',lampsOn.toFixed(3)); });
+    if(night>0.01) stars.forEach(function(s){ s.c.setAttribute('opacity',(night*(0.55+0.45*Math.sin(T*s.k+s.ph))).toFixed(2)); });
+    else if(stars[0].c.getAttribute('opacity')!=='0') stars.forEach(function(s){ s.c.setAttribute('opacity',0); });
     var ph=Math.floor(T/2.2)%3, cyc=[2,1,0][ph];
     tl.forEach(function(c,i){ c.setAttribute('fill',i===cyc?tlOn[i]:tlOff[i]); });
   }
@@ -1241,12 +1309,15 @@ footer em{color:var(--sun);font-style:normal}
     lFar.setAttribute('transform','translate('+(-pan*0.4-lx*24).toFixed(1)+' '+(-ly*10).toFixed(1)+')');
     lSun.setAttribute('transform','translate('+(-pan*0.08-lx*8).toFixed(1)+' '+(-ly*4).toFixed(1)+')');
     lSky.setAttribute('transform','translate('+(-pan*0.15-lx*12).toFixed(1)+' '+(-ly*6).toFixed(1)+')');
+    skyL.setAttribute('transform',lSky.getAttribute('transform')); sunL.setAttribute('transform',lSun.getAttribute('transform'));
+    farL.setAttribute('transform',lFar.getAttribute('transform')); nearL.setAttribute('transform',lNear.getAttribute('transform')); maskNear.setAttribute('transform',(function(){ var m=/translate\(([-\d.]+) ([-\d.]+)\)/.exec(lNear.getAttribute('transform')), f=/translate\(([-\d.]+) ([-\d.]+)\)/.exec(lFar.getAttribute('transform')); return 'translate('+((+m[1])-(+f[1])).toFixed(1)+' '+((+m[2])-(+f[2])).toFixed(1)+')'; })());
+    setDay(t);
 
     // intro / outro / flash / hud
     var io=1-sm(0.0,0.05,t); intro.style.opacity=io; intro.style.transform='translateY('+(-40*(1-io))+'px) scale('+(1+0.08*(1-io))+')'; intro.style.visibility=io<.01?'hidden':'visible';
     var oo=sm(0.95,0.995,t); outro.style.opacity=oo; outro.style.transform='translateY('+(30*(1-oo))+'px)'; outro.style.visibility=oo<.01?'hidden':'visible';
     var fl=Math.max(0,1-Math.abs(e-0.9)/0.1); flash.style.opacity=(fl*fl*0.75).toFixed(3);
-    var hv=sm(0.9,1,e)*(t<0.9?1:0)+(t>=0.9?sm(0.9,1,e):0); hud.style.opacity=hv; hud.style.transform='perspective(1200px) rotateY('+(look.x*2.5).toFixed(2)+'deg) rotateX('+(-look.y*2).toFixed(2)+'deg)'; hud.style.visibility=hv<.01?'hidden':'visible';
+    var hv=sm(0.9,1,e)*(t<0.9?1:0)+(t>=0.9?sm(0.9,1,e):0); hudVis=hv; hud.style.opacity=hv; hud.style.transform='perspective(1200px) rotateY('+(look.x*2.5).toFixed(2)+'deg) rotateX('+(-look.y*2).toFixed(2)+'deg)'; hud.style.visibility=hv<.01?'hidden':'visible';
     hint.style.opacity=t>0.01?0:1;
     shineRect.setAttribute('transform','translate('+(((t*6)%1)*900).toFixed(1)+' 0) rotate(22 400 515)'); shineRect.parentNode.setAttribute('opacity',(0.5*(1-sm(0.2,0.6,e))).toFixed(3));
 
