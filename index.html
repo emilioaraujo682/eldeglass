@@ -370,6 +370,9 @@ footer em{color:var(--sun);font-style:normal}
 .try-row{display:flex;gap:10px}
 .try-row input{flex:1;min-width:0;font:400 1rem var(--body);color:var(--ink);background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:12px 18px}
 .try-row .btn{padding:10px 22px}
+.try-ai-note{display:flex;align-items:center;gap:8px;margin:0;font-size:.9rem;color:var(--muted)}
+.try-ai-note[hidden]{display:none}
+.try-ai-note i{width:10px;height:10px;border-radius:50%;background:#3EE6A8;flex:none}
 .try-voice{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--muted)}
 .try-voice input{width:20px;height:20px;accent-color:var(--teal)}
 @media (max-width:900px){ .try-grid{grid-template-columns:1fr} }
@@ -1235,10 +1238,11 @@ html.night .c4,html.night .c4 strong,html.night .c4 span{color:#fff}
         <form class="try-form" id="tryForm">
           <label for="tryInput" class="try-label">Or type your own question</label>
           <div class="try-row">
-            <input id="tryInput" type="text" maxlength="120" placeholder="e.g. How do I get home?" autocomplete="off">
+            <input id="tryInput" type="text" maxlength="300" placeholder="Ask anything, e.g. How do I get home?" autocomplete="off">
             <button type="submit" class="btn primary">Ask</button>
           </div>
         </form>
+        <p class="try-ai-note" id="tryAiNote" hidden><i></i>Live AI answers are on. Your first question asks permission to use Claude.</p>
         <label class="try-voice"><input type="checkbox" id="tryVoice" checked> Read answers out loud</label>
       </div>
     </div>
@@ -2068,15 +2072,39 @@ html.night .c4,html.night .c4 strong,html.night .c4 span{color:#fff}
   function type(el,text,ms,done){ var i=0; el.textContent=''; el.classList.add('typing'); var iv=setInterval(function(){ i++; el.textContent=text.slice(0,i); if(i>=text.length){ clearInterval(iv); el.classList.remove('typing'); if(done) done(); } },ms); return iv; }
   function place(){ if(!cur) return; var t=sceneEl.querySelector('#tt'); if(!t){ ret.style.opacity=0; return; } var vr=view.getBoundingClientRect(), r=t.getBoundingClientRect(), p=8;
     ret.style.left=(r.left-vr.left-p)+'px'; ret.style.top=(r.top-vr.top-p)+'px'; ret.style.width=(r.width+p*2)+'px'; ret.style.height=(r.height+p*2)+'px'; }
-  function show(k,question){ var d=S[k]; cur=d; chips.forEach(function(c){ c.classList.toggle('on',c.dataset.k===k); });
+  function show(k,question,hold){ var d=S[k]; cur=d; chips.forEach(function(c){ c.classList.toggle('on',c.dataset.k===k&&!hold); });
     if(timer){ clearInterval(timer); timer=null; } if(window._tryIv){ clearInterval(window._tryIv); }
     sceneEl.innerHTML=svg(d.svg,d.sky); card.classList.remove('on'); card.innerHTML=d.card; ret.style.opacity=0; retLabel.textContent=d.label;
     var q=question||d.q; ai.textContent='';
+    if(hold){ you.textContent=q; return; }
     window._tryIv=type(you,q,28,function(){ place(); ret.style.opacity=1; card.classList.add('on'); speak(d.a); window._tryIv=type(ai,d.a,22); });
   }
-  chips.forEach(function(c){ c.addEventListener('click',function(){ show(c.dataset.k); }); });
-  form.addEventListener('submit',function(e){ e.preventDefault(); var v=input.value.trim(); if(!v) return; var k='help';
-    for(var i=0;i<KW.length;i++){ if(KW[i][1].test(v)){ k=KW[i][0]; break; } } show(k,v); input.value=''; });
+  chips.forEach(function(c){ c.addEventListener('click',function(){ if(aiCtl){ aiCtl.abort(); aiCtl=null; } show(c.dataset.k); }); });
+  function guess(v){ for(var i=0;i<KW.length;i++){ if(KW[i][1].test(v)) return KW[i][0]; } return 'help'; }
+  // ---- real AI answers (when the page runs inside Claude); keyword answers everywhere else ----
+  var sampleFn=null, aiOff=false, aiCtl=null, aiNote=document.getElementById('tryAiNote');
+  if(window.claude&&window.claude.use){ window.claude.use('sample').then(function(fn){ sampleFn=fn; if(fn&&aiNote) aiNote.hidden=false; }).catch(function(){}); }
+  function cardEl(title,rows){ var f=document.createDocumentFragment(), st=document.createElement('strong'); st.textContent=title; f.appendChild(st);
+    (rows||[]).slice(0,3).forEach(function(r){ var d=document.createElement('div'); d.className='r'; var a=document.createElement('span'), b=document.createElement('b'); a.textContent=String(r[0]||''); b.textContent=String(r[1]||''); d.appendChild(a); d.appendChild(b); f.appendChild(d); }); return f; }
+  function showAI(v){
+    var k0=guess(v); show(k0,v,true); ai.textContent='Thinking…'; ai.classList.remove('typing');
+    if(aiCtl) aiCtl.abort(); var ctl=aiCtl=new AbortController();
+    var prompt='You are EldeGlass, a warm, patient AI assistant built into smart glasses that help older adults get around their city: buses and public transport, grocery shopping, walking directions, reading signs and labels, medicine reminders and calling family. '
+      +'The wearer just asked (through the glasses): "'+v.slice(0,400)+'"\n\n'
+      +'Answer kindly and simply in at most 2 short sentences, in the same language the wearer used. You can see what is in front of them, so you may describe a plausible scene. If the question is unrelated to getting around (a general question), still answer it briefly and helpfully. '
+      +'Reply with only a JSON object like {"answer":"...","scene":"bus","label":"BUS 24 · 97%","card":{"title":"Bus 24 · Central Park","rows":[["Arrives","3 min"],["Your stop","5th stop"]]}}. '
+      +'scene must be one of: bus, lost, shop, sign, pill, call, help (help = anything else). label is a short UPPERCASE tag (max 18 characters). card has a short title and 2-3 rows of [label, value] (each under 22 characters).';
+    sampleFn.json(prompt,{modelTier:'quick',signal:ctl.signal}).then(function(r){ if(ctl!==aiCtl) return;
+      var sc=(r&&S[r.scene])?r.scene:k0, ans=String((r&&r.answer)||S[sc].a);
+      show(sc,v,true); card.textContent=''; if(r&&r.card&&r.card.title) card.appendChild(cardEl(String(r.card.title),Array.isArray(r.card.rows)?r.card.rows:[])); else card.innerHTML=S[sc].card;
+      retLabel.textContent=String((r&&r.label)||S[sc].label).slice(0,24); you.textContent=v; ai.textContent='';
+      place(); ret.style.opacity=1; card.classList.add('on'); speak(ans); window._tryIv=type(ai,ans,20);
+    }).catch(function(e){ if(ctl!==aiCtl||(e&&e.code==='cancelled')) return;
+      if(e&&(e.code==='not_granted'||e.code==='sampling_disabled'||e.code==='capability_disabled'||e.code==='not_declared')){ aiOff=true; if(aiNote) aiNote.hidden=true; }
+      show(k0,v); });
+  }
+  form.addEventListener('submit',function(e){ e.preventDefault(); var v=input.value.trim(); if(!v) return; input.value='';
+    if(sampleFn&&!aiOff) showAI(v); else show(guess(v),v); });
   window.addEventListener('resize',place); if('IntersectionObserver' in window) new IntersectionObserver(function(en){ if(en[0].isIntersecting) place(); }).observe(view);
   var clock=document.getElementById('tryClock'); function tick(){ var d=new Date(), h=d.getHours(), m=d.getMinutes(); clock.textContent=((h%12)||12)+':'+(m<10?'0':'')+m+' '+(h<12?'AM':'PM'); } tick(); setInterval(tick,20000);
   // start in a ready state so the panel is never empty
